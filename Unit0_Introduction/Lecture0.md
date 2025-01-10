@@ -7,7 +7,6 @@
   Your browser does not support the video tag.
 </video>
 
-
 [Video 2](https://clemson.instructure.com/courses/250574/modules/items/4582865)
 
 [Video 2 Notes (pdf)](lecture0_note.pdf)
