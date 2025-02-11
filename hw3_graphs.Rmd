@@ -1,0 +1,267 @@
+---
+title: 'DSA 8420 HW3'
+author: "saransh rakshak"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    latex_engine: xelatex
+---
+
+# 1. Solve the following linear programs graphically. For each problem, sketch the feasible region; state the set of optimal solutions and the optimal value if they exist; briefly explain the reason if no optimal solution exists.
+
+
+```{r 1helper}
+library(ggplot2)
+library(lpSolve)
+
+# using lpSolve lib
+plot_lp <- function(obj, constraints, directions, rhs, maximize = FALSE, title) {
+  solution <- lp(direction = ifelse(maximize, "max", "min"),
+                 objective.in = obj,
+                 const.mat = constraints,
+                 const.dir = directions,
+                 const.rhs = rhs)
+  
+  x1 <- seq(0, max(rhs), length.out = 100)
+  x2 <- seq(0, max(rhs), length.out = 100)
+  grid <- expand.grid(x1, x2)
+  colnames(grid) <- c("x1", "x2")
+  
+  feasible <- apply(grid, 1, function(x) {
+    all(constraints %*% x <= rhs)
+  })
+  
+  grid$feasible <- feasible
+  
+  plot <- ggplot(data = grid, aes(x = x1, y = x2)) +
+    geom_tile(aes(fill = feasible), alpha = 0.4) +
+    scale_fill_manual(values = c("TRUE" = "lightgreen", "FALSE" = "white")) +
+    geom_abline(slope = -obj[1]/obj[2], intercept = 0, color = "red") +
+    labs(title = title, x = "x1", y = "x2") +
+    theme_minimal()
+  
+  return(list(plot = plot, solution = solution))
+}
+```
+
+---
+
+## 1a. 
+
+min z = x1−4x2 
+
+such that...
+
+x1 + x2 <= 12
+
+−2x1 + x2 <= 4 
+
+x2 <= 8 
+
+x1 −3x2 <= 4 
+
+x1, x2 >= 0
+
+
+```{r 1a}
+obj1a <- c(1, -4)
+con1a <- matrix(c(1, 1, -2, 1, 0, 1, 1, -3), nrow = 4, byrow = TRUE)
+dir1a <- c("<=", "<=", "<=", "<=")
+rhs1a <- c(12, 4, 8, 4)
+
+result1a <- plot_lp(obj1a, con1a, dir1a, rhs1a, title = "1a: minimize z = x1 - 4x2")
+result1a
+```
+
+
+---
+
+## 1b. 
+
+min z = 4x1+5x2 
+
+such that...
+
+3x1 +2x2 <= 24 
+
+x1 >= 5 
+
+3x1 − x2 <= 6 
+
+x1, x2 >= 0
+
+
+```{r 1b}
+obj1b <- c(4, 5)
+con1b <- matrix(c(3, 2, -1, 0, 3, -1), nrow = 3, byrow = TRUE)
+dir1b <- c("<=", ">=", "<=")
+rhs1b <- c(24, 5, 6)
+
+result1b <- plot_lp(obj1b, con1b, dir1b, rhs1b, title = "1b: min z = 4x1 + 5x2")
+result1b
+```
+
+---
+
+## 1c. 
+
+min z = −x1+2x2
+
+so that...
+
+−2x1 + x2 <= 2 
+
+2x1 +5x2 >= 10 
+
+x1 −4x2 <= 2 
+
+x1, x2 >+ 0
+
+
+```{r 1c}
+obj1c <- c(-1, 2)
+con1c <- matrix(c(-2, 1, 2, 5, 1, -4), nrow = 3, byrow = TRUE)
+dir1c <- c("<=", ">=", "<=")
+rhs1c <- c(2, 10, 2)
+
+result1c <- plot_lp(obj1c, con1c, dir1c, rhs1c, title = "1c: min z = -x1 + 2x2")
+result1c
+```
+
+---
+
+## 1d. 
+
+max z = 6x1+8x2 
+
+such that..
+
+x1 +4x2 <= 16 
+
+3x1 +4x2 <= 24 
+
+3x1 −4x2 <= 12 
+
+x1, x2 >=0
+
+
+```{r 1d}
+obj1d <- c(6, 8)
+con1d <- matrix(c(1, 4, 3, 4, 3, -4), nrow = 3, byrow = TRUE)
+dir1d <- c("<=", "<=", "<=")
+rhs1d <- c(16, 24, 12)
+
+result1d <- plot_lp(obj1d, con1d, dir1d, rhs1d, maximize = TRUE, title = "1d. maximize z = 6x1 + 8x2")
+result1d
+```
+
+
+---
+
+# 2. Transform following to standard form.
+
+```{r 2helper}
+# LP into std
+convert_to_std <- function(obj, constraints, directions, rhs, vars_nonnegative, title) {
+  cat("\n", title, "\n")
+  
+  # RHS (+)
+  for (i in 1:length(rhs)) {
+    if (rhs[i] < 0) {
+      constraints[i, ] <- -constraints[i, ]
+      rhs[i] <- -rhs[i]
+      if (directions[i] == "<=") {
+        directions[i] <- ">="
+      } else if (directions[i] == ">=") {
+        directions[i] <- "<="
+      }
+    }
+  }
+  
+  num_constraints <- nrow(constraints)
+  slack_vars <- diag(num_constraints)
+  std_constraints <- cbind(constraints, slack_vars)
+  std_obj <- c(obj, rep(0, num_constraints))
+  
+  cat("Objective function: \n")
+  print(std_obj)
+  
+  cat("Standard form constraint: \n")
+  print(std_constraints)
+  
+  cat("RHS: \n")
+  print(rhs)
+  
+  cat("Vars: \n")
+  print(vars_nonnegative)
+}
+```
+
+
+---
+
+## 2a. 
+
+min z = 2x1−3x2+5x3+ x4 
+
+so that...
+
+−x1 +3x2 − x3+2x4 <=−12 
+
+5x1 + x2+4x3− x4 >= 10 
+
+3x1 −2x2 + x3− x4 = −8 
+
+x1, x2, x3, x4 >= 0
+
+```{r 2a}
+obj2a <- c(2, -3, 5, 1)
+con2a <- matrix(c(-1, 3, -1, 2,
+                  5, 1, 4, -1,
+                  3, -2, 1, -1), nrow = 3, byrow = TRUE)
+dir2a <- c("<=", ">=", "=")
+rhs2a <- c(-12, 10, -8)
+vars2a <- c("x1 >= 0", "x2 >= 0", "x3 >= 0", "x4 >= 0")
+
+convert_to_std(obj2a, con2a, dir2a, rhs2a, vars2a, title = "2a standard form:")
+```
+
+---
+
+## 2b.
+
+min z  = x1−x2 +x3 
+
+constraints:
+
+x1 +2x2 −x3 <= 3 
+
+x1 −x2 −x3 <= −2 
+
+x1 −x2 = 10 
+
+x1 >= 0
+
+x2 <= 0
+
+```{r 2b}
+obj2b <- c(1, -1, 1)
+con2b <- matrix(c(1, 2, -1,
+                  1, -1, -1,
+                  1, -1, 0), nrow = 3, byrow = TRUE)
+dir2b <- c("<=", "<=", "=")
+rhs2b <- c(3, -2, 10)
+vars2b <- c("x1 >= 0", "x2 <= 0")
+
+convert_to_std(obj2b, con2b, dir2b, rhs2b, vars2b, title = "2b standard form:")
+```
+
+
+
+---
+---
+
+
+
+
