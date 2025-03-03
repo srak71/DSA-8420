@@ -1,0 +1,13 @@
+data;
+
+set Beer := Light Dark Ale Premium ;
+
+param: w_malt w_hops w_yeast revenue :=
+Light 1 2 1 6 
+Dark 1 1 1 5
+Ale 0 2 1 3
+Premium 3 1 4 7;
+
+param avail_malt := 50;
+param avail_hops := 150;
+param avail_yeast := 80;
