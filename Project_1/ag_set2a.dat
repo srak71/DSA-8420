@@ -1,0 +1,12 @@
+data;
+
+set Crop := Corn Soybeans Oats;
+
+param: w_labor w_capital profit :=
+Corn 6 36 40 
+Soybeans 6 24 30
+Oats 2 18 20;
+
+param avail_land := 12;
+param avail_labor := 51;
+param avail_capital := 360;
